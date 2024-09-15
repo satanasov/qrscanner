@@ -23,16 +23,37 @@
     <div id="qr-reader"></div>
 
     <script>
-        function onScanSuccess(decodedText, decodedResult) {
-            console.log(`QR Code scanned: ${decodedText}`);
-            // Redirect to the URL
-            if (decodedText) {
-                window.location.href = decodedText;
+        // Function to request notification permissions
+        function requestNotificationPermission() {
+            if (Notification.permission !== 'granted') {
+                Notification.requestPermission().then(permission => {
+                    if (permission !== 'granted') {
+                        alert("You need to enable notifications to see the QR code content.");
+                    }
+                });
             }
         }
 
+        // Function to display the scanned QR code as a notification
+        function displayNotification(message) {
+            if (Notification.permission === 'granted') {
+                new Notification('QR Code Scanned', {
+                    body: message,
+                    icon: 'https://example.com/icon.png' // Optional icon for the notification
+                });
+            } else {
+                alert("Notifications are not enabled. The QR code content is: " + message);
+            }
+        }
+
+        // Function called when QR code is successfully scanned
+        function onScanSuccess(decodedText, decodedResult) {
+            console.log(`QR Code scanned: ${decodedText}`);
+            // Display the QR code content as a notification
+            displayNotification(decodedText);
+        }
+
         function onScanFailure(error) {
-            // Handle scan failure, usually you'd want to ignore or log this.
             console.warn(`QR Code scan failed: ${error}`);
         }
 
@@ -40,7 +61,7 @@
         let qrScanner = new Html5Qrcode("qr-reader");
 
         // Start scanning
-        qrScanner.start({ facingMode: "environment" }, 
+        qrScanner.start({ facingMode: "environment" },
             {
                 fps: 10,    // Scans per second
                 qrbox: 250  // Display scanning box
@@ -50,6 +71,9 @@
         ).catch(err => {
             console.error(`Failed to start QR scanner: ${err}`);
         });
+
+        // Request permission for notifications when the page loads
+        requestNotificationPermission();
     </script>
 </body>
 </html>
