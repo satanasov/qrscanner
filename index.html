@@ -59,8 +59,10 @@
             stopScanning();  // Stop scanning after success
         }
 
+        // Enhanced function to handle scan failures
         function onScanFailure(error) {
             logToDebugBox(`QR Code scan failed: ${error}`);
+            logToDebugBox("Possible reasons for failure: low-quality QR code, wrong barcode format, or poor camera focus.");
         }
 
         // Function to start the QR scanner when the button is clicked
@@ -77,7 +79,7 @@
                     { facingMode: "environment" }, // Rear camera
                     {
                         fps: 10,    // Scans per second
-                        qrbox: 250  // Display scanning box
+                        qrbox: 300  // Increased display scanning box size to 300px
                     },
                     onScanSuccess,
                     onScanFailure
@@ -105,7 +107,6 @@
 
         // Attach event listener to the button
         document.getElementById('start-scan').addEventListener('click', startScanning);
-
     </script>
 </body>
 </html>
