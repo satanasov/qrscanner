@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner with Debug</title>
+    <title>QR Code Scanner with Form Submission</title>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <style>
         body {
@@ -56,13 +56,12 @@
         // Function called when QR code is successfully scanned
         function onScanSuccess(decodedText, decodedResult) {
             logToDebugBox(`QR Code scanned successfully: ${decodedText}`);
+            submitForm(decodedText);  // Call the form submission function
             stopScanning();  // Stop scanning after success
         }
 
-        // Enhanced function to handle scan failures
         function onScanFailure(error) {
             logToDebugBox(`QR Code scan failed: ${error}`);
-            logToDebugBox("Possible reasons for failure: low-quality QR code, wrong barcode format, or poor camera focus.");
         }
 
         // Function to start the QR scanner when the button is clicked
@@ -103,6 +102,37 @@
                     logToDebugBox(`Failed to stop QR scanner: ${err}`);
                 });
             }
+        }
+
+        // Function to create and submit a form with QR code data
+        function submitForm(qrCodeValue) {
+            // Create a form element
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/submit';  // Replace with your actual form submission endpoint
+
+            // Create input elements for the form
+            const idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = qrCodeValue;
+
+            const statusInput = document.createElement('input');
+            statusInput.type = 'hidden';
+            statusInput.name = 'status';
+            statusInput.value = 'yi-checked';
+
+            // Append inputs to the form
+            form.appendChild(idInput);
+            form.appendChild(statusInput);
+
+            // Append the form to the body
+            document.body.appendChild(form);
+
+            // Submit the form
+            form.submit();
+
+            logToDebugBox('Form submitted with ID: ' + qrCodeValue + ' and status: yi-checked');
         }
 
         // Attach event listener to the button
