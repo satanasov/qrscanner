@@ -9,6 +9,7 @@
         body {
             font-family: Arial, sans-serif;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             height: 100vh;
@@ -16,13 +17,28 @@
         }
         #qr-reader {
             width: 300px;
+            display: none; /* Hide the scanner initially */
+        }
+        #start-scan {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #start-scan:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
+    <button id="start-scan">Start QR Code Scan</button>
     <div id="qr-reader"></div>
 
     <script>
+        let qrScanner;
+
         // Function to request notification permissions
         function requestNotificationPermission() {
             if (Notification.permission !== 'granted') {
@@ -57,22 +73,26 @@
             console.warn(`QR Code scan failed: ${error}`);
         }
 
-        // Initialize the QR Code scanner
-        let qrScanner = new Html5Qrcode("qr-reader");
+        // Function to start the QR scanner when the button is clicked
+        document.getElementById('start-scan').addEventListener('click', () => {
+            const qrReaderElement = document.getElementById('qr-reader');
+            qrReaderElement.style.display = 'block'; // Show the scanner div
+            qrScanner = new Html5Qrcode("qr-reader"); // Initialize scanner
 
-        // Start scanning
-        qrScanner.start({ facingMode: "environment" },
-            {
-                fps: 10,    // Scans per second
-                qrbox: 250  // Display scanning box
-            },
-            onScanSuccess,
-            onScanFailure
-        ).catch(err => {
-            console.error(`Failed to start QR scanner: ${err}`);
+            // Start scanning
+            qrScanner.start({ facingMode: "environment" },
+                {
+                    fps: 10,    // Scans per second
+                    qrbox: 250  // Display scanning box
+                },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error(`Failed to start QR scanner: ${err}`);
+            });
         });
 
-        // Request permission for notifications when the page loads
+        // Request notification permission when the page loads
         requestNotificationPermission();
     </script>
 </body>
