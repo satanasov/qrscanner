@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Scanner</title>
+    <title>QR Code Scanner with Debug</title>
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <style>
         body {
@@ -30,23 +30,40 @@
         #start-scan:hover {
             background-color: #0056b3;
         }
+        #debug-log {
+            width: 300px;
+            height: 150px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <button id="start-scan">Start QR Code Scan</button>
     <div id="qr-reader"></div>
+    <textarea id="debug-log" readonly></textarea>
 
     <script>
         let qrScanner;
+
+        // Function to log messages to the debug box
+        function logToDebugBox(message) {
+            const debugLog = document.getElementById('debug-log');
+            debugLog.value += message + "\n"; // Append the message
+            debugLog.scrollTop = debugLog.scrollHeight; // Auto-scroll to the bottom
+        }
 
         // Function to request notification permissions
         function requestNotificationPermission() {
             if (Notification.permission !== 'granted') {
                 Notification.requestPermission().then(permission => {
                     if (permission !== 'granted') {
-                        alert("You need to enable notifications to see the QR code content.");
+                        logToDebugBox("Notification permission denied.");
+                    } else {
+                        logToDebugBox("Notification permission granted.");
                     }
                 });
+            } else {
+                logToDebugBox("Notification permission already granted.");
             }
         }
 
@@ -57,26 +74,30 @@
                     body: message,
                     icon: 'https://example.com/icon.png' // Optional icon for the notification
                 });
+                logToDebugBox("Notification displayed: " + message);
             } else {
+                logToDebugBox("Notifications are not enabled. Showing alert instead.");
                 alert("Notifications are not enabled. The QR code content is: " + message);
             }
         }
 
         // Function called when QR code is successfully scanned
         function onScanSuccess(decodedText, decodedResult) {
-            console.log(`QR Code scanned: ${decodedText}`);
+            logToDebugBox(`QR Code scanned successfully: ${decodedText}`);
             // Display the QR code content as a notification
             displayNotification(decodedText);
         }
 
         function onScanFailure(error) {
-            console.warn(`QR Code scan failed: ${error}`);
+            logToDebugBox(`QR Code scan failed: ${error}`);
         }
 
         // Function to start the QR scanner when the button is clicked
         document.getElementById('start-scan').addEventListener('click', () => {
             const qrReaderElement = document.getElementById('qr-reader');
             qrReaderElement.style.display = 'block'; // Show the scanner div
+            logToDebugBox("Starting QR scanner...");
+
             qrScanner = new Html5Qrcode("qr-reader"); // Initialize scanner
 
             // Start scanning
@@ -88,7 +109,7 @@
                 onScanSuccess,
                 onScanFailure
             ).catch(err => {
-                console.error(`Failed to start QR scanner: ${err}`);
+                logToDebugBox(`Failed to start QR scanner: ${err}`);
             });
         });
 
