@@ -38,12 +38,13 @@
     </style>
 </head>
 <body>
-    <button id="start-scan">Start QR Code Scan</button>
+    <button id="start-scan">Scan QR Code</button>
     <div id="qr-reader"></div>
     <textarea id="debug-log" readonly></textarea>
 
     <script>
         let qrScanner;
+        let isScanning = false;
 
         // Function to log messages to the debug box
         function logToDebugBox(message) {
@@ -52,40 +53,10 @@
             debugLog.scrollTop = debugLog.scrollHeight; // Auto-scroll to the bottom
         }
 
-        // Function to request notification permissions
-        function requestNotificationPermission() {
-            if (Notification.permission !== 'granted') {
-                Notification.requestPermission().then(permission => {
-                    if (permission !== 'granted') {
-                        logToDebugBox("Notification permission denied.");
-                    } else {
-                        logToDebugBox("Notification permission granted.");
-                    }
-                });
-            } else {
-                logToDebugBox("Notification permission already granted.");
-            }
-        }
-
-        // Function to display the scanned QR code as a notification
-        function displayNotification(message) {
-            if (Notification.permission === 'granted') {
-                new Notification('QR Code Scanned', {
-                    body: message,
-                    icon: 'https://example.com/icon.png' // Optional icon for the notification
-                });
-                logToDebugBox("Notification displayed: " + message);
-            } else {
-                logToDebugBox("Notifications are not enabled. Showing alert instead.");
-                alert("Notifications are not enabled. The QR code content is: " + message);
-            }
-        }
-
         // Function called when QR code is successfully scanned
         function onScanSuccess(decodedText, decodedResult) {
             logToDebugBox(`QR Code scanned successfully: ${decodedText}`);
-            // Display the QR code content as a notification
-            displayNotification(decodedText);
+            stopScanning();  // Stop scanning after success
         }
 
         function onScanFailure(error) {
@@ -93,28 +64,48 @@
         }
 
         // Function to start the QR scanner when the button is clicked
-        document.getElementById('start-scan').addEventListener('click', () => {
+        function startScanning() {
             const qrReaderElement = document.getElementById('qr-reader');
             qrReaderElement.style.display = 'block'; // Show the scanner div
             logToDebugBox("Starting QR scanner...");
+            
+            if (!isScanning) {
+                qrScanner = new Html5Qrcode("qr-reader"); // Initialize scanner
+                isScanning = true;
 
-            qrScanner = new Html5Qrcode("qr-reader"); // Initialize scanner
+                qrScanner.start(
+                    { facingMode: "environment" }, // Rear camera
+                    {
+                        fps: 10,    // Scans per second
+                        qrbox: 250  // Display scanning box
+                    },
+                    onScanSuccess,
+                    onScanFailure
+                ).catch(err => {
+                    logToDebugBox(`Failed to start QR scanner: ${err}`);
+                    isScanning = false; // Reset scanning flag if failed
+                });
+            } else {
+                logToDebugBox("Already scanning...");
+            }
+        }
 
-            // Start scanning
-            qrScanner.start({ facingMode: "environment" },
-                {
-                    fps: 10,    // Scans per second
-                    qrbox: 250  // Display scanning box
-                },
-                onScanSuccess,
-                onScanFailure
-            ).catch(err => {
-                logToDebugBox(`Failed to start QR scanner: ${err}`);
-            });
-        });
+        // Function to stop scanning after QR code is scanned
+        function stopScanning() {
+            if (qrScanner) {
+                qrScanner.stop().then(() => {
+                    logToDebugBox("QR scanner stopped.");
+                    document.getElementById('qr-reader').style.display = 'none'; // Hide scanner
+                    isScanning = false;
+                }).catch(err => {
+                    logToDebugBox(`Failed to stop QR scanner: ${err}`);
+                });
+            }
+        }
 
-        // Request notification permission when the page loads
-        requestNotificationPermission();
+        // Attach event listener to the button
+        document.getElementById('start-scan').addEventListener('click', startScanning);
+
     </script>
 </body>
 </html>
